@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <LinearLayout
+        android:id="@+id/ll_main"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="25dp"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center">
+
+                <TextView
+                    style="@style/GridLayoutTitleTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="name: " />
+
+                <TextView
+                    android:id="@+id/device_name"
+                    style="@style/GridLayoutDataTextView"
+                    android:layout_gravity="center"
+                    android:gravity="center|left" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center">
+
+                <TextView
+                    style="@style/GridLayoutTitleTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/label_device_address" />
+
+                <TextView
+                    android:id="@+id/device_address"
+                    style="@style/GridLayoutDataTextView"
+                    android:gravity="center|left" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="25dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/GridLayoutTitleTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="状态  " />
+
+            <TextView
+                android:id="@+id/connection_state"
+                style="@style/GridLayoutDataTextView"
+                android:gravity="left|center"
+                android:text="未连接" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:background="@color/beauty_blue" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="45dp">
+
+                <TextView
+                    android:id="@+id/show_write_characteristic"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:gravity="center|left"
+                    android:paddingStart="6dp"
+                    android:text="@string/label_select_write_characteristic"
+                    android:textColor="@color/gray"
+                    android:textSize="12sp" />
+
+                <ImageView
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerInParent="true"
+                    android:layout_marginEnd="10dp"
+                    android:scaleType="center"
+                    android:src="@mipmap/write" />
+
+            </RelativeLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/gray_bg" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="45dp">
+
+                <TextView
+                    android:id="@+id/show_notify_characteristic"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:gravity="center|left"
+                    android:paddingStart="6dp"
+                    android:text="@string/label_select_notify_characteristic"
+                    android:textColor="@color/gray"
+                    android:textSize="12sp"
+                    tools:ignore="RtlSymmetry" />
+
+                <ImageView
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerInParent="true"
+                    android:layout_marginEnd="10dp"
+                    android:scaleType="center"
+                    android:src="@mipmap/notify" />
+            </RelativeLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/gray_bg" />
+
+            <RelativeLayout
+
+                android:layout_width="match_parent"
+                android:layout_height="45dp">
+
+                <TextView
+                    android:id="@+id/show_read_characteristic"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:gravity="center|left"
+                    android:paddingStart="6dp"
+                    android:text="@string/label_select_read_characteristic"
+                    android:textColor="@color/gray"
+                    android:textSize="12sp"
+                    tools:ignore="RtlSymmetry" />
+
+                <ImageView
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerInParent="true"
+                    android:layout_marginEnd="10dp"
+                    android:scaleType="center"
+                    android:src="@mipmap/reading" />
+            </RelativeLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/gray_bg" />
+
+
+            <TextView
+                style="@style/GridLayoutTitleTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/label_input"
+                android:visibility="gone" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:focusable="true"
+                android:focusableInTouchMode="true">
+
+
+                <AutoCompleteTextView
+                    android:id="@+id/autoCompleteTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@null"
+                    android:hint="输入指令"
+                    android:paddingStart="4dp"
+                    android:textSize="12sp"
+                    android:visibility="gone"
+                    tools:ignore="RtlSymmetry" />
+
+                <TextView
+                    android:id="@+id/input"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@null"
+                    android:gravity="center|left"
+                    android:paddingStart="4dp"
+                    android:text="点击输入指令"
+                    android:textSize="12sp"
+                    tools:ignore="RtlSymmetry" />
+
+                <Button
+                    android:id="@+id/btn_show_command"
+                    android:layout_width="80dp"
+                    android:layout_height="35dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerInParent="true"
+                    android:background="@drawable/button_selector"
+                    android:text="历史命令"
+                    android:textColor="@color/white"
+                    android:visibility="gone" />
+
+                <Button
+                    android:id="@+id/send"
+                    style="@style/GridLayoutTitleTextView"
+                    android:layout_width="60dp"
+                    android:layout_height="30dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerInParent="true"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/button_selector"
+                    android:text="@string/label_send"
+                    android:textColor="@color/white" />
+
+            </RelativeLayout>
+
+            <Button
+                android:id="@+id/recycle_send"
+                style="@style/GridLayoutTitleTextView"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:layout_marginEnd="4dp"
+                android:background="@drawable/button_selector"
+                android:text="@string/recycle_send"
+                android:textColor="@color/white"
+                android:visibility="gone" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:layout_marginTop="2dp"
+                android:background="@color/beauty_blue" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="40dp">
+
+                <TextView
+                    style="@style/GridLayoutTitleTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerInParent="true"
+                    android:text="@string/label_output" />
+
+                <Spinner
+                    android:id="@+id/spinner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerInParent="true"
+                    android:entries="@array/spinner" />
+            </RelativeLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/gray_bg" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/gray_bg">
+
+                <EditText
+                    android:id="@+id/output"
+                    android:layout_width="match_parent"
+                    android:layout_height="150dp"
+                    android:background="@null"
+                    android:enabled="false"
+                    android:gravity="top|left"
+                    android:padding="4dp"
+                    android:textSize="10sp"
+                    android:visibility="gone" />
+
+                <android.support.v7.widget.RecyclerView
+                    android:id="@+id/rv_show_out"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:paddingBottom="30dp" />
+
+                <Button
+                    android:id="@+id/output_txt"
+                    android:layout_width="80dp"
+                    android:layout_height="30dp"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginBottom="4dp"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/button_selector"
+                    android:text="导出文本"
+                    android:textColor="@color/white" />
+
+                <Button
+                    android:id="@+id/btn_clean"
+                    android:layout_width="80dp"
+                    android:layout_height="30dp"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginBottom="4dp"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/button_selector"
+                    android:text="清空数据"
+                    android:textColor="@color/white" />
+
+            </RelativeLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/beauty_blue"
+                android:visibility="gone" />
+        </LinearLayout>
+
+
+        <Button
+            android:id="@+id/select_read_characteristic"
+            style="@style/GridLayoutTitleTextView"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:background="@drawable/button_selector"
+            android:text="@string/label_select_read_characteristic"
+            android:textColor="@color/white"
+            android:visibility="gone" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="4dp"
+            android:background="@color/gray_bg"
+            android:visibility="gone" />
+
+        <GridLayout
+            android:id="@+id/gattInformation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:columnCount="2"
+            android:useDefaultMargins="true"
+            android:visibility="gone">
+
+            <TextView
+                style="@style/GridLayoutTitleTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/label_uuid" />
+
+            <TextView
+                android:id="@+id/uuid"
+                style="@style/GridLayoutDataTextViewMonospace" />
+
+            <TextView
+                style="@style/GridLayoutTitleTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/label_desc" />
+
+            <TextView
+                android:id="@+id/description"
+                style="@style/GridLayoutDataTextViewMonospace" />
+
+            <TextView
+                style="@style/GridLayoutTitleTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/label_as_string" />
+
+            <TextView
+                android:id="@+id/data_as_string"
+                style="@style/GridLayoutDataTextViewMonospace" />
+
+            <TextView
+                style="@style/GridLayoutTitleTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/label_as_array" />
+
+            <TextView
+                android:id="@+id/data_as_array"
+                style="@style/GridLayoutDataTextViewMonospace" />
+        </GridLayout>
+    </LinearLayout>
+
+</LinearLayout>

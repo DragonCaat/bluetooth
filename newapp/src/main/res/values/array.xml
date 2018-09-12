@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="spinner">
+        <item>文本</item>
+        <item>十六进制</item>
+    </string-array>
+</resources>

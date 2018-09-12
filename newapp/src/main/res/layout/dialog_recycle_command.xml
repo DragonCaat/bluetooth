@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:padding="10dp"
+    android:orientation="vertical"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:text="温馨提示"
+        android:textSize="16sp"
+        android:textColor="@color/beauty_blue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp">
+
+
+        <EditText
+            android:id="@+id/et_user_input"
+            android:hint="请输入命令"
+            android:gravity="center|left"
+            android:textSize="14sp"
+            android:background="@null"
+            android:layout_width="match_parent"
+            android:layout_height="50dp" />
+        <Spinner
+            android:id="@+id/spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerInParent="true"
+            android:entries="@array/spinner" />
+    </RelativeLayout>
+
+    <TextView
+        android:background="@color/beauty_blue"
+        android:layout_width="match_parent"
+        android:layout_height="1dp" />
+
+    <LinearLayout
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="40dp">
+
+        <Button
+            android:id="@+id/btn_ok"
+            android:textColor="@color/white"
+            android:text="循环发送"
+            android:background="@drawable/button_selector"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent" />
+
+        <View
+            android:layout_width="20dp"
+            android:layout_height="match_parent"/>
+
+        <Button
+            android:visibility="gone"
+            android:id="@+id/btn_recycle_send"
+            android:textColor="@color/white"
+            android:text="循环发送"
+            android:background="@drawable/button_selector"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent" />
+        <View
+            android:visibility="gone"
+            android:layout_width="20dp"
+            android:layout_height="match_parent"/>
+        <Button
+            android:id="@+id/btn_save"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:text="保存命令"
+            android:textColor="@color/white"
+            android:background="@drawable/button_selector"
+            />
+
+    </LinearLayout>
+
+    <ListView
+        android:id="@+id/lv"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>
