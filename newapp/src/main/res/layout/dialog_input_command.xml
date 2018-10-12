@@ -17,6 +17,16 @@
             android:text="命令转换"
             android:textColor="@color/white" />
 
+        <Button
+            android:layout_marginStart="4dp"
+            android:layout_toEndOf="@+id/btn_change_command"
+            android:background="@drawable/button_selector"
+            android:id="@+id/btn_time"
+            android:layout_width="80dp"
+            android:layout_height="match_parent"
+            android:text="时间"
+            android:textColor="@color/white" />
+
         <Spinner
             android:id="@+id/spinner"
             android:layout_width="wrap_content"

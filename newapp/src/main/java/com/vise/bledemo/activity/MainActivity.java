@@ -1,11 +1,14 @@
 package com.vise.bledemo.activity;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -25,6 +28,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -34,10 +38,14 @@ import com.vise.baseble.model.BluetoothLeDevice;
 import com.vise.baseble.utils.BleUtil;
 import com.vise.bledemo.R;
 import com.vise.bledemo.adapter.DeviceMainAdapter;
+import com.vise.bledemo.adapter.MainAdapter;
+import com.vise.bledemo.bean.MainBean;
 import com.vise.bledemo.common.BluetoothDeviceManager;
 import com.vise.bledemo.common.ToastUtil;
 import com.vise.bledemo.event.ConnectEvent;
 import com.vise.bledemo.event.NotifyDataEvent;
+import com.vise.bledemo.receiver.MyReceiver;
+import com.vise.bledemo.utils.TimeUtils;
 import com.vise.log.ViseLog;
 import com.vise.log.inner.LogcatTree;
 import com.vise.xsnow.event.BusManager;
@@ -45,7 +53,11 @@ import com.vise.xsnow.event.Subscribe;
 import com.vise.xsnow.permission.OnPermissionCallback;
 import com.vise.xsnow.permission.PermissionManager;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import static android.app.Activity.RESULT_CANCELED;
 
@@ -62,13 +74,19 @@ public class MainActivity extends AppCompatActivity {
     private TextView emptyTv;
     private TextView countTv;
 
+    private TextView tv;
+
     private DeviceMainAdapter adapter;
 
     private Context mContext;
 
+    //适配器
+    private MainAdapter mainAdapter;
+
     //底部弹出框
     private Dialog dialog;
 
+    private List<MainBean> list = new ArrayList<>();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -83,6 +101,26 @@ public class MainActivity extends AppCompatActivity {
 
         init();
         mContext = this;
+
+
+        //动态注册广播
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("myAction");
+        this.registerReceiver(myReceiver, filter);
+
+
+        FloatingActionButton viewById = (FloatingActionButton) findViewById(R.id.fb1);
+        viewById.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                Intent intent = new Intent();
+//                intent.setAction("myAction");
+//                intent.putExtra("mac", "Hi!I am broadcastData!");
+//                intent.putExtra("name", "Hi!I am broadcastData!");
+//                sendBroadcast(intent);
+            }
+        });
+
     }
 
     private void init() {
@@ -91,6 +129,8 @@ public class MainActivity extends AppCompatActivity {
         deviceLv = (ListView) findViewById(android.R.id.list);
         emptyTv = (TextView) findViewById(android.R.id.empty);
         countTv = (TextView) findViewById(R.id.connected_device_count);
+
+        tv = (TextView) findViewById(R.id.tv);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -101,21 +141,72 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        adapter = new DeviceMainAdapter(this);
-        deviceLv.setAdapter(adapter);
+//        adapter = new DeviceMainAdapter(this);
+//        deviceLv.setAdapter(adapter);
+
+        mainAdapter = new MainAdapter(list, this);
+        deviceLv.setAdapter(mainAdapter);
+
 
         deviceLv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-                BluetoothLeDevice device = (BluetoothLeDevice) adapter.getItem(position);
-                if (device == null) return;
-                Intent intent = new Intent(MainActivity.this, DeviceControlActivity.class);
-                intent.putExtra(DeviceDetailActivity.EXTRA_DEVICE, device);
+//                BluetoothLeDevice device = (BluetoothLeDevice) adapter.getItem(position);
+//                if (device == null) return;
+                Intent intent = new Intent(MainActivity.this, DeviceConnectionActivity.class);
+
+                Log.i("hello", "onItemClick: "+list.get(position).getMacStr()+"\n"+list.get(position).getName());
+
+                intent.putExtra("name", list.get(position).getMacStr());
+                intent.putExtra("mac", list.get(position).getName());
+                intent.putExtra("flag",1);
                 startActivity(intent);
+
+
             }
         });
     }
 
+    private BroadcastReceiver myReceiver = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            String flag = intent.getStringExtra("flag");
+
+            if ("1".equals(flag)) {
+                String macStr = intent.getStringExtra("mac");
+                String name = intent.getStringExtra("name");
+               // Log.i("hello", "onReceive: " + name);
+                MainBean mainBean = new MainBean(name, macStr);
+
+                list.add(mainBean);
+                mainAdapter.notifyDataSetChanged();
+            }else if ("0".equals(flag)){
+                if (list.size()>0){
+                    for (int i=0;i<list.size();i++){
+                        if (list.get(i).getName().equals(intent.getStringExtra("mac")))
+                            list.remove(i);
+                    }
+                    mainAdapter.notifyDataSetChanged();
+                }
+            }
+            Log.i("hello", "onReceive: "+flag);
+
+        }
+    };
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mainAdapter.notifyDataSetChanged();
+    }
+
+    /**
+     * 展示已经连接的涉笔
+     *
+     * @param event 连接的事件
+     */
     @Subscribe
     public void showConnectedDevice(ConnectEvent event) {
         if (event != null) {
@@ -123,13 +214,18 @@ public class MainActivity extends AppCompatActivity {
             if (event.isDisconnected()) {
                 ToastUtil.showToast(MainActivity.this, "Disconnect!");
             }
+
+            // Log.i("hello", "showConnectedDevice: ");
         }
     }
+
 
     @Subscribe
     public void showDeviceNotifyData(NotifyDataEvent event) {
         if (event != null && adapter != null) {
             adapter.setNotifyData(event.getBluetoothLeDevice(), event.getData());
+
+            // Log.i("hello", "showConnectedDevice: 我也是");
         }
     }
 
@@ -144,6 +240,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         ViseBle.getInstance().clear();
         BusManager.getBus().unregister(this);
+
+        this.unregisterReceiver(myReceiver);
+
         super.onDestroy();
     }
 
@@ -261,14 +360,14 @@ public class MainActivity extends AppCompatActivity {
         if (adapter != null && ViseBle.getInstance().getDeviceMirrorPool() != null) {
             List<BluetoothLeDevice> bluetoothLeDeviceList = ViseBle.getInstance().getDeviceMirrorPool().getDeviceList();
             if (bluetoothLeDeviceList != null && bluetoothLeDeviceList.size() > 0) {
-                deviceLv.setVisibility(View.VISIBLE);
+               // deviceLv.setVisibility(View.VISIBLE);
             } else {
-                deviceLv.setVisibility(View.GONE);
+                //deviceLv.setVisibility(View.GONE);
             }
             adapter.setListAll(bluetoothLeDeviceList);
             updateItemCount(adapter.getCount());
         } else {
-            deviceLv.setVisibility(View.GONE);
+           // deviceLv.setVisibility(View.GONE);
         }
     }
 

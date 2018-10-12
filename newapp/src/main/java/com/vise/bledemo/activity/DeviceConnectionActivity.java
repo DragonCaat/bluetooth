@@ -27,6 +27,7 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.util.TimeUtils;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -69,9 +70,11 @@ import com.vise.baseble.model.resolver.GattAttributeResolver;
 import com.vise.baseble.utils.HexUtil;
 import com.vise.bledemo.R;
 import com.vise.bledemo.adapter.GattServiceAdapter;
+import com.vise.bledemo.adapter.HistoryRecordAdapter;
 import com.vise.bledemo.adapter.OutPutAdapter;
 import com.vise.bledemo.adapter.ShowCommandAdapter;
 import com.vise.bledemo.bean.Constant;
+import com.vise.bledemo.bean.HistoryRecordEntity;
 import com.vise.bledemo.common.BluetoothDeviceManager;
 import com.vise.bledemo.common.KeyCodeUtils;
 import com.vise.bledemo.common.OnCommandClickListener;
@@ -80,6 +83,7 @@ import com.vise.bledemo.common.SampleGattAttributes;
 import com.vise.bledemo.common.ToastUtil;
 import com.vise.bledemo.database.RecordDatabaseUtils;
 import com.vise.bledemo.event.CallbackDataEvent;
+import com.vise.bledemo.event.ConnectEvent;
 import com.vise.bledemo.event.NotifyDataEvent;
 import com.vise.bledemo.view.SlidingLayout;
 import com.vise.xsnow.cache.SpCache;
@@ -98,6 +102,7 @@ import java.util.UUID;
 import static com.inuker.bluetooth.library.Constants.REQUEST_SUCCESS;
 import static com.inuker.bluetooth.library.Constants.STATUS_CONNECTED;
 import static com.inuker.bluetooth.library.Constants.STATUS_DISCONNECTED;
+import static com.vise.bledemo.common.StringUtil.bitToByte;
 
 /***
 
@@ -179,6 +184,8 @@ public class DeviceConnectionActivity extends AppCompatActivity implements View.
     private UUID writeUuid;
     private UUID serviceUuid;
 
+    private UUID notifyServiceUUID;
+
     private Button send;
 
     //判断是否在循环输入命令
@@ -192,16 +199,32 @@ public class DeviceConnectionActivity extends AppCompatActivity implements View.
     /**
      * 侧滑布局对象，用于通过手指滑动将左侧的菜单布局进行显示或隐藏。
      */
-//    private SlidingLayout slidingLayout;
-//
-//    private LinearLayout mLlMain;
+    private SlidingLayout slidingLayout;
+    //记录历史操作的recycleView
+    private RecyclerView mRecycleView;
+    private HistoryRecordAdapter recordAdapter;
+    private List<HistoryRecordEntity> recordEntityList = new ArrayList<>();
+    private Button mBtnCleanHistory;
+
+    //用于存放步数的list
+    private ArrayList<String> stepList = new ArrayList<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device_connection);
+
+
         Intent intent = getIntent();
         macStr = intent.getStringExtra("mac");
-        macName = intent.getStringExtra("address");
+        //macName = intent.getStringExtra("address");
+        int flag = intent.getIntExtra("flag", 0);
+
+
+        if (flag == 1)
+            isConnection = true;
+        else
+            isConnection = false;
 
         mContext = this;
         if (mClient == null)
@@ -209,15 +232,17 @@ public class DeviceConnectionActivity extends AppCompatActivity implements View.
         init();
         showDefaultInfo();
 
-        //slidingLayout = (SlidingLayout) findViewById(R.id.slidingLayout);
-        // mLlMain = fv(R.id.ll_main);
+        slidingLayout = (SlidingLayout) findViewById(R.id.slidingLayout);
+        slidingLayout.setScrollEvent(mRvShowOut);
 
-        //slidingLayout.setScrollEvent(mRvShowOut);
+        //初始化记录历史操作的recycleView
+        initHistoryRecycle();
 
         //注册连接状态的监听
         mClient.registerConnectStatusListener(macStr, mBleConnectStatusListener);
     }
 
+    //蓝牙连接状态监听
     private final BleConnectStatusListener mBleConnectStatusListener = new BleConnectStatusListener() {
 
         @SuppressLint("SetTextI18n")
@@ -226,31 +251,87 @@ public class DeviceConnectionActivity extends AppCompatActivity implements View.
             if (status == STATUS_CONNECTED) {
                 mConnectionState.setText(" 已连接");
                 isConnection = true;
+                String s = mEtNotifyCharacteristic.getText().toString();
+                if (!"点击选择可通知服务".equals(s) && !TextUtils.isEmpty(macStr))
+                    notify1(notifyServiceUUID, UUID.fromString(s));
+
+                //发送已经连接的设备
+                sendBroadcast("1");
+
+                addHistoryData("Connected to " + macStr);
+
             } else if (status == STATUS_DISCONNECTED) {
                 mConnectionState.setText(" 未连接");
                 isConnection = false;
                 //断开的时候正在连接则移除相关的任务
                 if (isRecycle)
-                    mHandler.removeCallbacks(runable);
-            }
+                    mHandler.removeCallbacks(runnable);
 
+                //发送已经断开连接的设备
+                sendBroadcast("0");
+
+                addHistoryData("Disconnected to " + macStr);
+            }
             hideProgressDialog();
 
             invalidateOptionsMenu();
         }
     };
 
+    //发送广播
+    private void sendBroadcast(String v) {
+        Intent intent = new Intent();
+        intent.setAction("myAction");
+        intent.putExtra("flag", v);
+        intent.putExtra("mac", macStr);
+        intent.putExtra("name", macName);
+        sendBroadcast(intent);
+    }
+
+
+    //初始化记录历史操作的recycleView
+    private void initHistoryRecycle() {
+        mRecycleView = (RecyclerView) findViewById(R.id.recycleView);
+        GridLayoutManager manager = new GridLayoutManager(this, 1);
+        mRecycleView.setLayoutManager(manager);
+        recordAdapter = new HistoryRecordAdapter(recordEntityList, this);
+        mRecycleView.setAdapter(recordAdapter);
+
+        //清除历史记录
+        mBtnCleanHistory = (Button) findViewById(R.id.btn_clean_history);
+        mBtnCleanHistory.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                recordEntityList.clear();
+                recordAdapter.notifyDataSetChanged();
+            }
+        });
+    }
+
+    //添加历史记录消息
+    private void addHistoryData(String s) {
+        HistoryRecordEntity recordEntity = new HistoryRecordEntity(getTime(), s);
+        recordEntityList.add(recordEntity);
+        recordAdapter.notifyDataSetChanged();
+    }
+
+    //获取当前的时间
+    private String getTime() {
+        //使用Date
+        Date d = new Date();
+        @SuppressLint("SimpleDateFormat")
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+        return sdf.format(d);
+    }
 
     private void connection() {
         showProgressDialog("正在连接");
-
         BleConnectOptions options = new BleConnectOptions.Builder()
                 .setConnectRetry(3)   // 连接如果失败重试3次
                 .setConnectTimeout(30000)   // 连接超时30s
                 .setServiceDiscoverRetry(3)  // 发现服务如果失败重试3次
                 .setServiceDiscoverTimeout(20000)  // 发现服务超时20s
                 .build();
-
         mClient.connect(macStr, options, new BleConnectResponse() {
             @Override
             public void onResponse(int code, BleGattProfile data) {
@@ -263,6 +344,8 @@ public class DeviceConnectionActivity extends AppCompatActivity implements View.
 
     /**
      * 显示GATT服务展示的信息
+     * <p>
+     * maybe I was too young
      */
     private void showGattServices() {
         if (gattServiceAdapter == null) {
@@ -306,6 +389,7 @@ public class DeviceConnectionActivity extends AppCompatActivity implements View.
                 if ((charaProp & BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
 
                     mEtNotifyCharacteristic.setText("" + characteristic.getUuid());
+                    notifyServiceUUID = service.getUUID();
 
                     notify1(service.getUUID(), characteristic.getUuid());
 
@@ -320,7 +404,7 @@ public class DeviceConnectionActivity extends AppCompatActivity implements View.
     }
 
     //注册可通知的Characteristic的监听
-    private void notify1(UUID serviceUUID, UUID characterUUID) {
+    private void notify1(final UUID serviceUUID, UUID characterUUID) {
 
         //注册通知前，先取消通知
         mClient.unnotify(macStr, serviceUUID, characterUUID, new BleUnnotifyResponse() {
@@ -330,13 +414,19 @@ public class DeviceConnectionActivity extends AppCompatActivity implements View.
             }
         });
 
+        //清空数组中的数据
+        stepList.clear();
+
         mClient.notify(macStr, serviceUUID, characterUUID, new BleNotifyResponse() {
+
             @SuppressLint("SetTextI18n")
             @Override
             public void onNotify(UUID service, UUID character, byte[] value) {
                 // Log.i("hello", "onNotify: 有新消息哦" + bytesToHexString(value));
                 mOutputInfo.append(HexUtil.encodeHexStr(value)).append("\n");
                 mOutput.setText(" " + mOutputInfo.toString());
+
+              //  Log.i("hello", "onNotify: "+new String(String.valueOf(value[1])));
 
                 if (OUT_TYPE == 0) {//文本输出
                     String s = HexUtil.encodeHexStr(value);
@@ -347,7 +437,15 @@ public class DeviceConnectionActivity extends AppCompatActivity implements View.
                     String s = HexUtil.encodeHexStr(value);
                     list.add(0, s);
                     adapter.notifyDataSetChanged();
+
+                    String command = mInput.getText().toString();
+                    if (command.contains("ATHST"))//包含步数命令则存入数据
+                        stepList.add(s);
+
                 }
+
+                addHistoryData("receive data " + HexUtil.encodeHexStr(value) + "from " + serviceUUID);
+
 
             }
 
@@ -355,32 +453,38 @@ public class DeviceConnectionActivity extends AppCompatActivity implements View.
             public void onResponse(int code) {
                 if (code == REQUEST_SUCCESS) {
                     Toast.makeText(mContext, "通知已打开", Toast.LENGTH_SHORT).show();
+                    addHistoryData("notify success to " + serviceUUID);
+                } else {
+                    addHistoryData("notify fail to " + serviceUUID);
                 }
-
-                //Log.i("hello", "onResponse: " + code);
             }
         });
 
     }
 
     //写入可写的Characteristic字段的监听
-    private void writeCharacteristic(UUID serviceUUID, UUID characterUUID, byte[] bytes) {
+    private void writeCharacteristic(final UUID serviceUUID, UUID characterUUID, final byte[] bytes) {
         mClient.write(macStr, serviceUUID, characterUUID, bytes, new BleWriteResponse() {
             @Override
             public void onResponse(int code) {
                 if (code == REQUEST_SUCCESS) {
+
+                    addHistoryData("write success to " + serviceUUID + " values :" + bytesToHexString(bytes));
+
                     if (isRecycle)
                         return;
-                    Toast.makeText(mContext, "发送成功", Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(mContext, "发送成功", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(mContext, "发送失败", Toast.LENGTH_SHORT).show();
+
+                    addHistoryData("write data fail to " + serviceUUID);
                 }
             }
         });
     }
 
     //写入可读的Characteristic字段的监听
-    private void readCharacteristic(UUID serviceUUID, UUID characterUUID) {
+    private void readCharacteristic(final UUID serviceUUID, UUID characterUUID) {
         mClient.read(macStr, serviceUUID, characterUUID, new BleReadResponse() {
             @Override
             public void onResponse(int code, byte[] data) {
@@ -396,8 +500,11 @@ public class DeviceConnectionActivity extends AppCompatActivity implements View.
                         adapter.notifyDataSetChanged();
                     }
 
+                    addHistoryData("read data success from " + serviceUUID + " values :" + HexUtil.encodeHexStr(data));
+
                 } else {
                     ToastUtil.showShortToast(mContext, "读取失败");
+                    addHistoryData("read data fail from " + serviceUUID);
                 }
             }
         });
@@ -524,7 +631,6 @@ public class DeviceConnectionActivity extends AppCompatActivity implements View.
                             ToastUtil.showShortToast(mContext, "乱码不可转换");
                             return;
                         }
-
                         String s = list.get(i).trim();
                         if (!isHexData(s)) {
                             s = str2HexStr(s);
@@ -538,7 +644,6 @@ public class DeviceConnectionActivity extends AppCompatActivity implements View.
             }
 
             public void onNothingSelected(AdapterView<?> arg0) {
-                // TODO Auto-generated method stub
             }
         });
 
@@ -574,7 +679,7 @@ public class DeviceConnectionActivity extends AppCompatActivity implements View.
             public void onClick(View v) {
                 if (isRecycle) {//正在循环
                     //终止循环
-                    mHandler.removeCallbacks(runable);
+                    mHandler.removeCallbacks(runnable);
                     isRecycle = false;
                     send.setText("发送");
                 } else {
@@ -632,7 +737,36 @@ public class DeviceConnectionActivity extends AppCompatActivity implements View.
             }
         });
 
+        //分析数据
+        Button btnAnalysis = (Button) findViewById(R.id.btn_analysis);
+        btnAnalysis.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //showAnalysisDialog();
+                if (stepList.size()>0){
+                    String command = mInput.getText().toString();
+                    Intent intent = new Intent(mContext, AnalysisActivity.class);
+                    intent.putStringArrayListExtra("step", stepList);
+                    intent.putExtra("command",command);
+                    startActivity(intent);
+                }else {
+                    ToastUtil.showShortToast(mContext,"当前无数据，或数据不符合要求");
+                }
+
+            }
+        });
     }
+
+    //展示分析数据的dialog
+    private void showAnalysisDialog() {
+        android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(mContext, R.style.Theme_AppCompat_Light_Dialog_Alert);
+        final android.support.v7.app.AlertDialog dialog = builder.create();
+        View view = View.inflate(mContext, R.layout.dialog_analysis, null);
+        dialog.setView(view, 0, 0, 0, 0);
+
+        dialog.show();
+    }
+
 
     /**
      * 展示输入的dialog
@@ -742,6 +876,22 @@ public class DeviceConnectionActivity extends AppCompatActivity implements View.
             }
         });
 
+        //时间的十六进制转换
+        Button btnTime = view.findViewById(R.id.btn_time);
+        btnTime.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String hexTime = com.vise.bledemo.utils.TimeUtils.getHexTime();
+                String hexTimeZone = com.vise.bledemo.utils.TimeUtils.getHexTimeZone();
+
+                String command = "415453544D3D" + hexTime + hexTimeZone;
+                //"415453544D3D141106070A34152B051E";
+
+                editText.setText(command);
+                editText.setSelection(command.length());
+            }
+        });
+
         //发送命令
         final Button btnOk = view.findViewById(R.id.btn_ok);
         btnOk.setOnClickListener(new View.OnClickListener() {
@@ -822,7 +972,7 @@ public class DeviceConnectionActivity extends AppCompatActivity implements View.
                 //展示用户输入的命令
                 mInput.setText(userInputStr);
                 //立即执行
-                mHandler.post(runable);
+                mHandler.post(runnable);
 
                 isRecycle = true;
                 send.setText("终止循环");
@@ -853,7 +1003,7 @@ public class DeviceConnectionActivity extends AppCompatActivity implements View.
     Handler mHandler = new Handler();
 
     //要执行的方法
-    Runnable runable = new Runnable() {
+    Runnable runnable = new Runnable() {
         @Override
         public void run() {
             mHandler.postDelayed(this, recycleTime);//每隔3s执行
@@ -867,10 +1017,8 @@ public class DeviceConnectionActivity extends AppCompatActivity implements View.
     protected void onStart() {
         super.onStart();
         int connectStatus = mClient.getConnectStatus(macStr);
-
         if (connectStatus != Constants.STATUS_DEVICE_CONNECTED)
             connection();
-
     }
 
     @Override
@@ -919,7 +1067,7 @@ public class DeviceConnectionActivity extends AppCompatActivity implements View.
     protected void onDestroy() {
         BusManager.getBus().unregister(this);
         //断开连接
-        mClient.disconnect(macStr);
+        //mClient.disconnect(macStr);
         mClient.unregisterConnectStatusListener(macStr, mBleConnectStatusListener);
 
         super.onDestroy();
@@ -958,6 +1106,13 @@ public class DeviceConnectionActivity extends AppCompatActivity implements View.
         adapter.notifyDataSetChanged();
     }
 
+    /**
+     * 写入byte数据
+     *
+     * @param serviceUUID   服务的uuid
+     * @param characterUUID 字段的uuid
+     * @param userInput     用户输入的字符
+     */
     private void writeBytes(UUID serviceUUID, UUID characterUUID, String userInput) {
         String userCommand;
         if (TextUtils.isEmpty(userInput))
@@ -1182,6 +1337,7 @@ public class DeviceConnectionActivity extends AppCompatActivity implements View.
                 if (list != null)
                     list.clear();
                 adapter.notifyDataSetChanged();
+                stepList.clear();
                 break;
             //展示保存过的命令只取出8条
 //            case R.id.btn_show_command:
@@ -1450,6 +1606,7 @@ public class DeviceConnectionActivity extends AppCompatActivity implements View.
 
         dialog.show();
     }
+
 
     //绑定控件
     private <T extends View> T fv(int resId) {

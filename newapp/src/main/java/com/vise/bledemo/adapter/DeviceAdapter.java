@@ -51,61 +51,61 @@ public class DeviceAdapter extends HelperAdapter<BluetoothLeDevice> {
 
         TextView deviceBoned = viewHolder.getView(R.id.tv_boned);
 
-
         LinearLayout llBluetooth = viewHolder.getView(R.id.ll_show_bluetooth);
         llBluetooth.setVisibility(View.VISIBLE);
-        if (bluetoothLeDevice != null && bluetoothLeDevice.getDevice() != null) {
-            final String deviceName = bluetoothLeDevice.getDevice().getName();
-            if (deviceName != null && !deviceName.isEmpty()) {
-                deviceNameTv.setText(deviceName);
-            } else {
-                //llBluetooth.setVisibility(View.GONE);
-                return;
-            }
+        String deviceName = bluetoothLeDevice.getDevice().getName();
+//        if (bluetoothLeDevice != null && bluetoothLeDevice.getDevice() != null) {
+//            final String deviceName = bluetoothLeDevice.getDevice().getName();
+//            if (deviceName != null && !deviceName.isEmpty()) {
+//                deviceNameTv.setText(deviceName);
+//            } else {
+//                //llBluetooth.setVisibility(View.GONE);
+//                return;
+//            }
 
-            deviceImage.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent(context, DeviceControlActivity.class);
+        deviceImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(context, DeviceControlActivity.class);
                 intent.putExtra(DeviceDetailActivity.EXTRA_DEVICE, bluetoothLeDevice);
                 context.startActivity(intent);
-                }
-            });
+            }
+        });
 
 
-            deviceNameTv.setText(deviceName);
-            deviceMacTv.setText(bluetoothLeDevice.getDevice().getAddress());
-            deviceRssiTv.setText("" + bluetoothLeDevice.getRssi());
+        deviceNameTv.setText(deviceName);
+        deviceMacTv.setText(bluetoothLeDevice.getDevice().getAddress());
+        deviceRssiTv.setText("" + bluetoothLeDevice.getRssi());
 
-            deviceScanRecordTv.setText(mContext.getString(R.string.header_scan_record) + ":"
-                    + HexUtil.encodeHexStr(bluetoothLeDevice.getScanRecord()));
-            deviceImage.setBackgroundResource(R.drawable.circle_bg);
+        deviceScanRecordTv.setText(mContext.getString(R.string.header_scan_record) + ":"
+                + HexUtil.encodeHexStr(bluetoothLeDevice.getScanRecord()));
+        deviceImage.setBackgroundResource(R.drawable.circle_bg);
 
-            if (bluetoothLeDevice.getDevice().getBluetoothClass().getDeviceClass() == PHONE_SMART)
-                deviceImage.setImageResource(R.mipmap.phone);//智能手机
-            else if (bluetoothLeDevice.getDevice().getBluetoothClass().getDeviceClass() == COMPUTER_LAPTOP)
-                deviceImage.setImageResource(R.mipmap.computer);//笔记本
-            else if (bluetoothLeDevice.getDevice().getBluetoothClass().getDeviceClass() == AUDIO_VIDEO_WEARABLE_HEADSET)
-                deviceImage.setImageResource(R.mipmap.bluetooth_earphone);//蓝牙耳机
-            else if (bluetoothLeDevice.getDevice().getBluetoothClass().getDeviceClass() == WEARABLE_WRIST_WATCH)
-                deviceImage.setImageResource(R.mipmap.bluetooth_circle);//手表
-            else if (bluetoothLeDevice.getDevice().getBluetoothClass().getDeviceClass() == 7936)
-                deviceImage.setImageResource(R.mipmap.bluetooth_circle);//手环
-            else
-                deviceImage.setImageResource(R.mipmap.bluetooth_circle);
+        if (bluetoothLeDevice.getDevice().getBluetoothClass().getDeviceClass() == PHONE_SMART)
+            deviceImage.setImageResource(R.mipmap.phone);//智能手机
+        else if (bluetoothLeDevice.getDevice().getBluetoothClass().getDeviceClass() == COMPUTER_LAPTOP)
+            deviceImage.setImageResource(R.mipmap.computer);//笔记本
+        else if (bluetoothLeDevice.getDevice().getBluetoothClass().getDeviceClass() == AUDIO_VIDEO_WEARABLE_HEADSET)
+            deviceImage.setImageResource(R.mipmap.bluetooth_earphone);//蓝牙耳机
+        else if (bluetoothLeDevice.getDevice().getBluetoothClass().getDeviceClass() == WEARABLE_WRIST_WATCH)
+            deviceImage.setImageResource(R.mipmap.bluetooth_circle);//手表
+        else if (bluetoothLeDevice.getDevice().getBluetoothClass().getDeviceClass() == 7936)
+            deviceImage.setImageResource(R.mipmap.bluetooth_circle);//手环
+        else
+            deviceImage.setImageResource(R.mipmap.bluetooth_circle);
 
-            //bluetooth_common  另一种形式的蓝牙图标
+        //bluetooth_common  另一种形式的蓝牙图标
 
-            // 将蓝牙信号强度换算为距离
-            double power = (bluetoothLeDevice.getRssi() - 59) / 25.0;
+        // 将蓝牙信号强度换算为距离
+        double power = (bluetoothLeDevice.getRssi() - 59) / 25.0;
 
-            deviceDistance.setText("" + (-power));
-
-
-            deviceBoned.setText(""+bluetoothLeDevice.getBluetoothDeviceBondState());
+        deviceDistance.setText("" + (-power));
 
 
-        }
+        deviceBoned.setText("" + bluetoothLeDevice.getBluetoothDeviceBondState());
+
 
     }
+
+
 }

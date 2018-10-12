@@ -19,7 +19,7 @@ android {
 }
 
 dependencies {
-    compile 'com.vise.xiaoyaoyou:viselog:1.1.2'
+    implementation 'com.vise.xiaoyaoyou:viselog:1.1.0'
 }
 
 apply from: '../bintray.gradle'

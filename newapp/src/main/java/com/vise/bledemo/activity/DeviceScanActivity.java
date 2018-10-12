@@ -59,25 +59,29 @@ public class DeviceScanActivity extends AppCompatActivity {
     private ScanCallback periodScanCallback = new ScanCallback(new IScanCallback() {
         @Override
         public void onDeviceFound(final BluetoothLeDevice bluetoothLeDevice) {
-            // ViseLog.i("hello" + bluetoothLeDevice);
-            bluetoothLeDeviceStore.addDevice(bluetoothLeDevice);
+
+            String name = bluetoothLeDevice.getDevice().getName();
+
+            if (deviceList.size() > 0) {
+                for (int i = 0; i < deviceList.size(); i++) {
+                    if (deviceList.get(i).getAddress().equals(bluetoothLeDevice.getAddress()))
+                        return;
+                }
+            }
+
+            if (name != null && !name.isEmpty())
+                deviceList.add(bluetoothLeDevice);
+
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    if (adapter != null && bluetoothLeDeviceStore != null) {
-                        if (deviceList != null)
+                    //排序
+                    Collections.sort(deviceList, new SortByRssi());
+                    adapter.clear();
+                    adapter.setListAll(deviceList);
 
-                            deviceList.clear();
+                    updateItemCount(adapter.getCount());
 
-                        deviceList.addAll(bluetoothLeDeviceStore.getDeviceList());
-                        adapter.setListAll(deviceList);
-                        //排序
-                        Collections.sort(deviceList, new SortByRssi());
-                        adapter.clear();
-                        adapter.setListAll(deviceList);
-
-                        updateItemCount(adapter.getCount());
-                    }
                 }
             });
         }
@@ -257,9 +261,7 @@ public class DeviceScanActivity extends AppCompatActivity {
 
         invalidateOptionsMenu();
 
-//        Collections.sort(deviceList, new SortByRssi());
-//        adapter.clear();
-//        adapter.setListAll(deviceList);
+        adapter.notifyDataSetChanged();
     }
 
     //排序

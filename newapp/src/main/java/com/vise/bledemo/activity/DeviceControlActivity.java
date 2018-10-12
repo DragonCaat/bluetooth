@@ -271,30 +271,8 @@ public class DeviceControlActivity extends AppCompatActivity implements View.OnC
             ((TextView) findViewById(R.id.device_name)).setText(mDevice.getName());
         }
         mSpCache = new SpCache(this);
-        //选择可写的服务
-//        findViewById(R.id.select_write_characteristic).setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                if (isConnection)
-//                    showGattServices();
-//                else
-//                    ToastUtil.showShortToast(mContext, "当前设备未连接");
-//            }
-//        });
 
 
-        //选择通知服务
-
-//        findViewById(R.id.select_notify_characteristic).setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                if (isConnection)
-//                    showGattServices();
-//                else
-//                    ToastUtil.showShortToast(mContext, "当前设备未连接");
-//            }
-//        });
-        //选择可读服务
 
         //选择可读服务
         findViewById(R.id.select_read_characteristic).setOnClickListener(new View.OnClickListener() {
